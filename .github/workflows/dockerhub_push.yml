@@ -1,0 +1,33 @@
+name: Docker Image CI
+
+on:
+  push:
+    branches: [ "main" ]
+
+jobs:
+
+  build:
+
+    runs-on: ubuntu-latest
+    
+    permissions:
+        contents: read
+        packages: write
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Build the Docker image
+      run: 
+        docker build . --file Dockerfile --tag sirlazybone/helloworldflask
+    - name: Login to DockerHub Registry
+      run: docker login -u ${{ secrets.DOCKER_USERNAME }} --password ${{ secrets.DOCKER_TOKEN }}
+    - name: Tag image
+      run:
+          docker tag sirlazybone/helloworldflask sirlazybone/helloworldflask:${{ github.event.head_commit.message }}
+    - name: Push image
+      run:
+          docker push sirlazybone/helloworldflask:${{ github.event.head_commit.message }}
+    - name: Test
+      run:
+        docker pull sirlazybone/helloworldflask:${{ github.event.head_commit.message }} |
+        echo “sample 123”
